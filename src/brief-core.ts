@@ -17,6 +17,7 @@
 
 import { buildCronContext } from 'deepspace/worker'
 import { SCOPE_ID } from './constants'
+import { resolveOpenCalls } from './scoring'
 import type { Env } from '../worker'
 import type {
   Brief,
@@ -229,7 +230,7 @@ function toBriefMarket(
  */
 export async function buildDailyBrief(
   env: BriefEnv,
-): Promise<{ brief: Brief; emailsSent: number; usedHistoryFallback: boolean }> {
+): Promise<{ brief: Brief; emailsSent: number; usedHistoryFallback: boolean; callsResolved: number }> {
   const ctx = buildCronContext(
     env as unknown as Parameters<typeof buildCronContext>[0],
     env.OWNER_USER_ID,
@@ -343,7 +344,15 @@ export async function buildDailyBrief(
   }
   await upsertByDate(ctx, 'briefs', date, brief as unknown as Record<string, unknown>)
 
-  // 8. Email digest to opted-in users.
+  // 8. Score any open calls whose markets have since resolved.
+  let callsResolved = 0
+  try {
+    callsResolved = await resolveOpenCalls(ctx)
+  } catch {
+    // Resolution is best-effort; don't fail the brief over it.
+  }
+
+  // 9. Email digest to opted-in users.
   let emailsSent = 0
   try {
     emailsSent = await sendDigests(ctx, env, brief)
@@ -351,7 +360,17 @@ export async function buildDailyBrief(
     // Never fail the build because email delivery hiccuped.
   }
 
-  return { brief, emailsSent, usedHistoryFallback }
+  return { brief, emailsSent, usedHistoryFallback, callsResolved }
+}
+
+/** Resolve + score open calls without rebuilding the brief (cheap, on-demand). */
+export async function resolveCallsOnly(env: BriefEnv): Promise<number> {
+  const ctx = buildCronContext(
+    env as unknown as Parameters<typeof buildCronContext>[0],
+    env.OWNER_USER_ID,
+    SCOPE_ID,
+  ) as unknown as CronCtx
+  return resolveOpenCalls(ctx)
 }
 
 /** Send the brief to every user who opted into the email digest. */

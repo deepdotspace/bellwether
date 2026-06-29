@@ -9,6 +9,7 @@ export type Path =
   | `/api-status`
   | `/digest`
   | `/home`
+  | `/scorecard`
   | `/settings`
 
 export type Params = {

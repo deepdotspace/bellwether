@@ -14,6 +14,7 @@ import { briefsSchema } from './schemas/briefs-schema'
 import { snapshotsSchema } from './schemas/snapshots-schema'
 import { followsSchema } from './schemas/follows-schema'
 import { preferencesSchema } from './schemas/preferences-schema'
+import { callsSchema } from './schemas/calls-schema'
 
 export const schemas: CollectionSchema[] = [
   usersSchema,
@@ -22,4 +23,5 @@ export const schemas: CollectionSchema[] = [
   snapshotsSchema,
   followsSchema,
   preferencesSchema,
+  callsSchema,
 ]

@@ -1,6 +1,7 @@
 import { Star, TrendingUp, TrendingDown, Minus, Clock, BarChart3 } from 'lucide-react'
 import type { BriefMarket } from '../types'
 import { useFollows } from '../lib/useBrief'
+import CallControl from './CallControl'
 import {
   formatPct,
   formatDelta,
@@ -104,6 +105,9 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
       <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
         {market.blurb}
       </p>
+
+      {/* Make-your-call control */}
+      <CallControl market={market} />
 
       {/* Footer */}
       <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">

@@ -14,8 +14,8 @@
     "test:smoke": "deepspace test smoke",
     "test:api": "deepspace test api",
     "test:e2e": "deepspace test e2e",
-    "test:unit": "vitest run --passWithNoTests",
-    "test:watch": "vitest",
+    "test:unit": "vitest run --config vitest.config.ts --passWithNoTests",
+    "test:watch": "vitest --config vitest.config.ts",
     "screenshot": "deepspace screenshot",
     "type-check": "tsc --noEmit",
     "lint": "eslint ."
