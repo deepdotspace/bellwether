@@ -13,6 +13,7 @@ import { useAnalysis } from '../lib/useAnalysis'
 import { useCalls } from '../lib/useCalls'
 import type { BriefMarket, MarketAnalysis } from '../types'
 import { formatPct } from '../lib/format'
+import { cn } from './ui/utils'
 
 export default function AnalystModal({
   market,
@@ -42,26 +43,26 @@ export default function AnalystModal({
     <Modal open onClose={onClose} size="lg">
       <Modal.Header>
         <Modal.Title>
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2.5">
             <Newspaper className="h-5 w-5 text-primary" aria-hidden />
-            AI Analyst
+            <span className="font-serif text-xl font-semibold">Market briefing</span>
           </span>
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p className="text-sm font-medium leading-snug text-foreground">{market.question}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Market prices {market.outcomes[0] ?? 'Yes'} at {formatPct(market.yesPrice)}. Neutral,
-          news-sourced — not advice.
+        <p className="text-[0.95rem] font-medium leading-snug text-foreground">{market.question}</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          {market.outcomes[0] ?? 'Yes'} trades at {formatPct(market.yesPrice)} · drawn from recent
+          reporting, not advice
         </p>
 
         {generating && !analysis ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm text-muted-foreground">
             <LoadingSpinner />
-            Reading the latest headlines and writing the analysis…
+            Reading the latest reporting and writing the briefing…
           </div>
         ) : error && !analysis ? (
-          <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-300">
+          <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-4 text-sm text-destructive">
             {error}
             {canGenerate && (
               <div className="mt-3">
@@ -76,10 +77,10 @@ export default function AnalystModal({
             {canGenerate ? (
               <Button onClick={generate} loading={generating}>
                 <Sparkles className="mr-2 h-4 w-4" aria-hidden />
-                Generate analysis
+                Write the briefing
               </Button>
             ) : (
-              'Sign in to generate an AI analysis for this market.'
+              'Sign in to generate a briefing for this market.'
             )}
           </div>
         ) : (
@@ -115,50 +116,51 @@ function AnalysisBody({
   myProb: number | null
   market: BriefMarket
 }) {
-  // Devil's advocate: surface the case opposing the user's lean.
+  // If the reader has a call, surface the strongest counter to their lean.
   const primary = market.outcomes[0] ?? 'Yes'
   const secondary = market.outcomes[1] ?? 'No'
-  let challenge: { side: string; text: string } | null = null
+  let counter: { side: string; text: string } | null = null
   if (myProb != null) {
-    if (myProb > 0.55) challenge = { side: secondary, text: analysis.bearCase }
-    else if (myProb < 0.45) challenge = { side: primary, text: analysis.bullCase }
+    if (myProb > 0.55) counter = { side: secondary, text: analysis.bearCase }
+    else if (myProb < 0.45) counter = { side: primary, text: analysis.bullCase }
   }
 
   return (
-    <div className="mt-5 space-y-4">
-      <p className="text-sm leading-relaxed text-foreground">{analysis.summary}</p>
+    <div className="mt-6 space-y-5">
+      <p className="text-[0.95rem] leading-relaxed text-foreground">{analysis.summary}</p>
 
-      {challenge && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+      {counter && (
+        <div className="rounded-xl border border-primary/25 bg-primary/[0.07] px-4 py-3.5">
+          <div className="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-primary">
             <ShieldAlert className="h-4 w-4" aria-hidden />
-            Devil&apos;s advocate · you lean {myProb! > 0.5 ? primary : secondary} ({formatPct(myProb!)})
+            The other side
           </div>
           <p className="mt-1.5 text-sm leading-relaxed text-foreground">
-            The case for {challenge.side} you might be underweighting: {challenge.text}
+            You&apos;re leaning {myProb! > 0.5 ? primary : secondary} ({formatPct(myProb!)}). The
+            strongest case the other way: {counter.text}
           </p>
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <CasePanel
-          tone="bull"
+          tone="for"
           icon={<TrendingUp className="h-4 w-4" />}
-          title={`Bull case · ${primary}`}
+          title={`The case for ${primary}`}
           text={analysis.bullCase}
         />
         <CasePanel
-          tone="bear"
+          tone="against"
           icon={<TrendingDown className="h-4 w-4" />}
-          title={`Bear case · ${secondary}`}
+          title={`The case for ${secondary}`}
           text={analysis.bearCase}
         />
       </div>
 
-      <div className="rounded-xl border border-border bg-card/60 px-4 py-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
+      <div className="rounded-xl border border-border bg-card/60 px-4 py-3.5">
+        <div className="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-primary">
           <Zap className="h-4 w-4" aria-hidden />
-          What could move this
+          What to watch
         </div>
         <p className="mt-1.5 text-sm leading-relaxed text-foreground">{analysis.whatCouldMove}</p>
       </div>
@@ -190,7 +192,7 @@ function AnalysisBody({
       )}
 
       <p className="text-[11px] text-muted-foreground">
-        Generated {new Date(analysis.generatedAt).toLocaleString()} · grounded in the headlines above.
+        Written {new Date(analysis.generatedAt).toLocaleString()} · grounded in the sources above.
       </p>
     </div>
   )
@@ -202,26 +204,15 @@ function CasePanel({
   title,
   text,
 }: {
-  tone: 'bull' | 'bear'
+  tone: 'for' | 'against'
   icon: React.ReactNode
   title: string
   text: string
 }) {
+  const accent = tone === 'for' ? 'text-emerald-400' : 'text-rose-400'
   return (
-    <div
-      className={
-        tone === 'bull'
-          ? 'rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3'
-          : 'rounded-xl border border-rose-500/25 bg-rose-500/5 px-4 py-3'
-      }
-    >
-      <div
-        className={
-          tone === 'bull'
-            ? 'flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-400'
-            : 'flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-rose-400'
-        }
-      >
+    <div className="rounded-xl border border-border bg-card/60 px-4 py-3.5">
+      <div className={cn('flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.08em]', accent)}>
         {icon}
         {title}
       </div>

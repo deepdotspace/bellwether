@@ -28,9 +28,9 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
   const yesPct = Math.round(market.yesPrice * 100)
 
   return (
-    <div className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40">
-      {/* Header: topic + follow star */}
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <div className="group relative flex flex-col rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.75)]">
+      {/* Header: topic dateline + actions */}
+      <div className="mb-3.5 flex items-center justify-between gap-2">
         <button
           type="button"
           disabled={!canFollow}
@@ -38,15 +38,18 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
             canFollow && toggle('topic', market.topic, formatTopic(market.topic), market.image)
           }
           className={cn(
-            'inline-flex max-w-[70%] items-center gap-1.5 truncate rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-            topicFollowed
-              ? 'border-primary/40 bg-primary/15 text-primary'
-              : 'border-border bg-muted/60 text-muted-foreground',
-            canFollow && 'hover:border-primary/40 hover:text-primary',
+            'inline-flex max-w-[70%] items-center gap-1.5 truncate text-[0.7rem] font-semibold uppercase tracking-[0.1em] transition-colors',
+            topicFollowed ? 'text-primary' : 'text-muted-foreground',
+            canFollow && 'hover:text-primary',
           )}
           title={canFollow ? `Follow topic: ${formatTopic(market.topic)}` : undefined}
         >
-          <BarChart3 className="h-3 w-3 shrink-0" aria-hidden />
+          <span
+            className={cn(
+              'h-1 w-1 shrink-0 rounded-full',
+              topicFollowed ? 'bg-primary' : 'bg-muted-foreground/60',
+            )}
+          />
           <span className="truncate">{formatTopic(market.topic)}</span>
         </button>
 
@@ -54,8 +57,8 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
           <button
             type="button"
             onClick={() => setAnalystOpen(true)}
-            aria-label="Open AI Analyst"
-            title="AI Analyst — news-sourced bull/bear"
+            aria-label="Open market briefing"
+            title="Market briefing — the read on this market"
             className="rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
           >
             <Newspaper className="h-4 w-4" />
@@ -82,26 +85,26 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
         href={`${POLYMARKET_BASE}${market.slug}`}
         target="_blank"
         rel="noreferrer"
-        className="text-[15px] font-semibold leading-snug tracking-tight text-foreground transition-colors hover:text-primary"
+        className="text-[1.05rem] font-semibold leading-[1.3] tracking-[-0.01em] text-foreground transition-colors hover:text-primary"
       >
         {market.question}
       </a>
 
       {/* Odds + delta */}
-      <div className="mt-4 flex items-end justify-between">
+      <div className="mt-5 flex items-end justify-between">
         <div>
-          <div className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="text-[2.5rem] font-semibold leading-none tabular-nums tracking-[-0.02em] text-foreground">
             {formatPct(market.yesPrice)}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {market.outcomes[0] ?? 'Yes'} likely
+          <div className="mt-1.5 text-xs text-muted-foreground">
+            chance of {market.outcomes[0] ?? 'Yes'}
           </div>
         </div>
         <DeltaBadge label={deltaLabel} up={up} down={down} source={market.deltaSource} />
       </div>
 
       {/* Probability bar */}
-      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+      <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-muted">
         <div
           className={cn(
             'h-full rounded-full transition-all',

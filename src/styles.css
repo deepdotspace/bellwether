@@ -17,27 +17,31 @@
  * they stay consistent across every preset.
  */
 @theme {
-  /* shadcn core tokens — slate (default): neutral gray on near-black, indigo accent */
-  --color-background: #0a0a0a;
-  --color-foreground: #e8eaed;
-  --color-card: #161616;
-  --color-card-foreground: #e8eaed;
-  --color-popover: #161616;
-  --color-popover-foreground: #e8eaed;
-  --color-primary: #818cf8;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #1e1e1e;
-  --color-secondary-foreground: #e8eaed;
-  --color-muted: #1e1e1e;
-  --color-muted-foreground: #9ca3af;
-  --color-accent: #262626;
-  --color-accent-foreground: #e8eaed;
-  --color-destructive: #ef4444;
+  /* Typography — editorial serif display + clean sans UI */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+
+  /* Bellwether — deep ink with a refined champagne-gold accent */
+  --color-background: #0a0a0c;
+  --color-foreground: #ece9e3;
+  --color-card: #121215;
+  --color-card-foreground: #ece9e3;
+  --color-popover: #141418;
+  --color-popover-foreground: #ece9e3;
+  --color-primary: #d8b36a;
+  --color-primary-foreground: #1a1408;
+  --color-secondary: #1a1a1e;
+  --color-secondary-foreground: #ece9e3;
+  --color-muted: #161619;
+  --color-muted-foreground: #989389;
+  --color-accent: #201f24;
+  --color-accent-foreground: #ece9e3;
+  --color-destructive: #e5484d;
   --color-destructive-foreground: #ffffff;
-  --color-border: rgba(60, 64, 67, 0.6);
-  --color-input: rgba(60, 64, 67, 0.6);
-  --color-ring: #818cf8;
-  --radius: 0.5rem;
+  --color-border: rgba(236, 233, 227, 0.09);
+  --color-input: rgba(236, 233, 227, 0.13);
+  --color-ring: #d8b36a;
+  --radius: 0.75rem;
 
   /* Status colors — constant across all themes */
   --color-success: #10b981;
@@ -77,16 +81,16 @@
   --color-surface: var(--color-background);
   --color-surface-elevated: var(--color-card);
   --color-surface-overlay: var(--color-muted);
-  --color-surface-input: rgba(30, 41, 59, 0.6);
+  --color-surface-input: rgba(236, 233, 227, 0.06);
   --color-content: var(--color-foreground);
   --color-content-secondary: var(--color-muted-foreground);
-  --color-content-muted: #64748b;
-  --color-content-inverse: #0f172a;
-  --color-border-strong: rgba(71, 85, 105, 0.5);
+  --color-content-muted: #6f6a60;
+  --color-content-inverse: #1a1408;
+  --color-border-strong: rgba(236, 233, 227, 0.16);
   --color-border-focus: var(--color-ring);
-  --color-primary-hover: #6d7bf5;
-  --color-primary-muted: rgba(129, 140, 248, 0.2);
-  --color-primary-border: rgba(129, 140, 248, 0.3);
+  --color-primary-hover: #e3c07e;
+  --color-primary-muted: rgba(216, 179, 106, 0.18);
+  --color-primary-border: rgba(216, 179, 106, 0.32);
   --color-danger: var(--color-destructive);
   --color-danger-muted: rgba(239, 68, 68, 0.2);
   --color-danger-border: rgba(239, 68, 68, 0.4);
@@ -163,12 +167,21 @@
   }
 
   body {
-    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.5;
+    font-family: var(--font-sans);
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-size: 14px;
+    letter-spacing: -0.006em;
     color: var(--color-foreground);
+  }
+
+  /* Editorial serif display — characterful at large sizes via Fraunces opsz. */
+  .font-serif,
+  h1.font-serif,
+  h2.font-serif {
+    font-feature-settings: 'ss01';
+    letter-spacing: -0.018em;
   }
 
   /* Scrollbar styling */

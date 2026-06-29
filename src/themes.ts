@@ -14,6 +14,11 @@
 export const THEMES = [
   // ── Dark ─────────────────────────────────────────────────────────────────
   {
+    id: 'bellwether',
+    label: 'Bellwether',
+    description: 'Deep ink with a champagne-gold accent. Editorial, premium, calm.',
+  },
+  {
     id: 'slate',
     label: 'Slate',
     description: 'Neutral cool gray with indigo accent. The professional default.',

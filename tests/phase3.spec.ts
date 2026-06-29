@@ -23,13 +23,13 @@ test('AI Analyst generates a news-sourced write-up', async ({ users }) => {
   const page = user.page
   await page.goto('/home')
   await expect(page.getByRole('heading', { name: 'Top movers' })).toBeVisible({ timeout: 15_000 })
-  // Open the Analyst on the first card.
-  await page.getByRole('button', { name: 'Open AI Analyst' }).first().click()
+  // Open the market briefing on the first card.
+  await page.getByRole('button', { name: 'Open market briefing' }).first().click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
-  // Auto-generates: wait for the bull/bear analysis to land.
-  await expect(dialog.getByText(/Bull case/i)).toBeVisible({ timeout: 45_000 })
-  await expect(dialog.getByText(/Bear case/i)).toBeVisible()
+  // Auto-generates: wait for the news-sourced analysis to land.
+  await expect(dialog.getByText(/The case for/i).first()).toBeVisible({ timeout: 45_000 })
+  await expect(dialog.getByText(/What to watch/i)).toBeVisible()
   await page.screenshot({ path: 'test-results/analyst.png', fullPage: false })
 })
 

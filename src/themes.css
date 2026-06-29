@@ -11,6 +11,32 @@
  *   2. Add an entry to `src/themes.ts` so it shows up in the typed catalog.
  */
 
+/* Bellwether — the app's signature look (deep ink + champagne gold). Mirrors
+   the @theme baseline in styles.css so runtime [data-theme] consumers agree. */
+[data-theme="bellwether"] {
+  --color-background: #0a0a0c;
+  --color-foreground: #ece9e3;
+  --color-card: #121215;
+  --color-card-foreground: #ece9e3;
+  --color-popover: #141418;
+  --color-popover-foreground: #ece9e3;
+  --color-primary: #d8b36a;
+  --color-primary-foreground: #1a1408;
+  --color-secondary: #1a1a1e;
+  --color-secondary-foreground: #ece9e3;
+  --color-muted: #161619;
+  --color-muted-foreground: #989389;
+  --color-accent: #201f24;
+  --color-accent-foreground: #ece9e3;
+  --color-destructive: #e5484d;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(236, 233, 227, 0.09);
+  --color-input: rgba(236, 233, 227, 0.13);
+  --color-ring: #d8b36a;
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+}
+
 /* ── Dark themes ──────────────────────────────────────────── */
 
 /* Ink — warm-deep dark, violet accent (premium design tools) */

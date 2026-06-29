@@ -42,17 +42,20 @@ export default function Navigation() {
         data-testid="app-navigation"
         className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
       >
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-          {/* Brand — primary-tinted dot + name. Replace the dot with your logo. */}
-          <Link to="/home" className="flex items-center gap-2 shrink-0">
-            <span className="h-2 w-2 rounded-full bg-primary" />
-            <span className="font-serif text-lg font-bold tracking-tight text-foreground">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-7 px-4 sm:px-6 lg:px-8">
+          {/* Brand — gold mark + serif wordmark. */}
+          <Link to="/home" className="flex shrink-0 items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              <span className="absolute h-2.5 w-2.5 rounded-full bg-primary/40 blur-[3px]" />
+            </span>
+            <span className="font-serif text-[1.35rem] font-semibold leading-none tracking-tight text-foreground">
               Bellwether
             </span>
           </Link>
 
-          {/* Primary nav (desktop) */}
-          <div className="hidden md:flex items-center gap-0.5">
+          {/* Primary nav (desktop) — understated text with a gold active rule. */}
+          <div className="hidden items-center gap-6 md:flex">
             {visibleNav.map((item) => {
               const active = location.pathname.startsWith(item.path)
               return (
@@ -61,13 +64,16 @@ export default function Navigation() {
                   to={item.path}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150',
+                    'relative py-1 text-[0.9rem] transition-colors duration-150',
                     active
-                      ? 'bg-secondary text-foreground'
-                      : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+                      ? 'font-medium text-foreground'
+                      : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {item.label}
+                  {active && (
+                    <span className="absolute -bottom-[1.35rem] left-0 right-0 h-px bg-primary" />
+                  )}
                 </Link>
               )
             })}
