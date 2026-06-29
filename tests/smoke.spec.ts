@@ -56,6 +56,14 @@ test.describe('Smoke tests', () => {
     await expect(page.getByTestId('nav-sign-in-button')).toBeVisible()
   })
 
+  test('edition page renders (read or empty state)', async ({ page }) => {
+    await page.goto('/edition')
+    await waitForApp(page)
+    const masthead = page.getByText('The Edition', { exact: false })
+    const empty = page.getByText('No edition yet')
+    await expect(masthead.or(empty).first()).toBeVisible({ timeout: 15000 })
+  })
+
   test('unknown route shows 404', async ({ page }) => {
     await page.goto('/nonexistent-page-xyz')
     await waitForApp(page)

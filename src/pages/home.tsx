@@ -7,6 +7,7 @@ import {
   Star,
   ArrowRight,
   Target,
+  Coffee,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from 'deepspace'
@@ -29,6 +30,7 @@ import {
 } from '../lib/useBrief'
 import { useCalls } from '../lib/useCalls'
 import { useStreak } from '../lib/useStreak'
+import { useLatestEdition } from '../lib/useEdition'
 import { formatBriefDate } from '../lib/format'
 import { cn } from '../components/ui/utils'
 import type { Brief, BriefMarket } from '../types'
@@ -39,6 +41,7 @@ export default function HomePage() {
   const { follows, isFollowing } = useFollows()
   const { byMarket } = useCalls()
   const { streak, active } = useStreak()
+  const { edition } = useLatestEdition()
   const { success, error: toastError, info } = useToast()
   const [refreshing, setRefreshing] = useState(false)
 
@@ -95,6 +98,31 @@ export default function HomePage() {
           <NoBrief canRefresh={isSignedIn} refreshing={refreshing} onRefresh={handleRefresh} />
         ) : (
           <Tabs defaultValue="all" className="mt-8">
+            {edition && (
+              <Link
+                to="/edition"
+                className="group mb-6 flex items-center gap-4 rounded-2xl border border-border bg-gradient-to-r from-card via-card to-background px-5 py-4 transition-colors hover:border-primary/40"
+              >
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-inset ring-primary/25">
+                  <Coffee className="h-5 w-5" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-primary">
+                    Today&apos;s Edition
+                  </div>
+                  <div className="truncate font-serif text-[1.05rem] font-semibold text-foreground">
+                    {edition.headline}
+                  </div>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
+                  Read
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </span>
+              </Link>
+            )}
             {isSignedIn && (
               <DailyBanner
                 brief={brief}

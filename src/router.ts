@@ -9,6 +9,7 @@ export type Path =
   | `/api-status`
   | `/daily`
   | `/digest`
+  | `/edition`
   | `/home`
   | `/inbox`
   | `/scorecard`

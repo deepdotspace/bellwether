@@ -19,6 +19,7 @@ import { streaksSchema } from './schemas/streaks-schema'
 import { analysesSchema } from './schemas/analyses-schema'
 import { notificationsSchema } from './schemas/notifications-schema'
 import { profilesSchema } from './schemas/profiles-schema'
+import { editionsSchema } from './schemas/editions-schema'
 
 export const schemas: CollectionSchema[] = [
   usersSchema,
@@ -32,4 +33,5 @@ export const schemas: CollectionSchema[] = [
   analysesSchema,
   notificationsSchema,
   profilesSchema,
+  editionsSchema,
 ]

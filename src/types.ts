@@ -54,6 +54,38 @@ export interface BriefMarket {
   deltaSource: 'snapshot' | 'history' | 'none'
 }
 
+/** One threaded story within the daily Edition (a market + its narrative + coverage). */
+export interface EditionStory {
+  marketId: string
+  question: string
+  slug: string
+  image: string
+  topic: string
+  yesPrice: number
+  outcomes: string[]
+  delta: number | null
+  /** A short narrative take weaving the odds, the move, and the news. */
+  take: string
+  sources: { title: string; url: string; source: string; publishedAt?: string }[]
+}
+
+/**
+ * The Edition — a single editorial "morning read" threading the day's top
+ * markets and their coverage. One per day (recordId = `YYYY-MM-DD`). Public.
+ */
+export interface Edition {
+  date: string
+  headline: string
+  /** Standfirst / subtitle. */
+  dek: string
+  /** The editor's lede paragraph. */
+  intro: string
+  stories: EditionStory[]
+  signoff: string
+  marketCount: number
+  generatedAt: number
+}
+
 /** The full daily brief, keyed by date (recordId = `YYYY-MM-DD`). */
 export interface Brief {
   date: string

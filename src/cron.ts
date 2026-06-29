@@ -22,7 +22,8 @@ export async function runTask(name: string, env: Env): Promise<void> {
     console.log(
       `[bellwether] brief ${etDateKey()} built — ${result.brief.marketCount} markets, ` +
         `${result.brief.topMovers.length} movers, ${result.callsResolved} calls resolved, ` +
-        `${result.swingAlerts} swing alerts, ${result.emailsSent} emails sent` +
+        `${result.swingAlerts} swing alerts, edition ${result.editionBuilt ? 'ok' : 'skipped'}, ` +
+        `${result.emailsSent} emails sent` +
         (result.usedHistoryFallback ? ' (history fallback)' : ''),
     )
   }

@@ -18,10 +18,12 @@
 import { buildCronContext } from 'deepspace/worker'
 import { SCOPE_ID } from './constants'
 import { resolveOpenCalls } from './scoring'
+import { buildEdition, renderEditionEmail } from './edition'
 import type { Env } from '../worker'
 import type {
   Brief,
   BriefMarket,
+  Edition,
   Preference,
   Snapshot,
   SnapshotMarket,
@@ -239,6 +241,7 @@ export async function buildDailyBrief(
   usedHistoryFallback: boolean
   callsResolved: number
   swingAlerts: number
+  editionBuilt: boolean
 }> {
   const ctx = buildCronContext(
     env as unknown as Parameters<typeof buildCronContext>[0],
@@ -361,7 +364,17 @@ export async function buildDailyBrief(
     // Resolution is best-effort; don't fail the brief over it.
   }
 
-  // 9. Swing alerts to users following sharply-moving markets (cron only).
+  // 9. Compose the editorial "Edition" — the threaded morning read.
+  let editionBuilt = false
+  let edition = null
+  try {
+    edition = await buildEdition(ctx, brief, date)
+    editionBuilt = true
+  } catch {
+    // The brief stands on its own if the edition can't be written.
+  }
+
+  // 10. Swing alerts to users following sharply-moving markets (cron only).
   let swingAlerts = 0
   if (opts.sendAlerts) {
     try {
@@ -371,15 +384,15 @@ export async function buildDailyBrief(
     }
   }
 
-  // 10. Email digest to opted-in users.
+  // 11. Email the Edition to opted-in users (falls back to the brief digest).
   let emailsSent = 0
   try {
-    emailsSent = await sendDigests(ctx, env, brief)
+    emailsSent = await sendDigests(ctx, env, brief, edition)
   } catch {
     // Never fail the build because email delivery hiccuped.
   }
 
-  return { brief, emailsSent, usedHistoryFallback, callsResolved, swingAlerts }
+  return { brief, emailsSent, usedHistoryFallback, callsResolved, swingAlerts, editionBuilt }
 }
 
 /** Notify (+ email) users following markets/topics that swung sharply overnight. */
@@ -496,8 +509,13 @@ export async function resolveCallsOnly(env: BriefEnv): Promise<number> {
   return resolveOpenCalls(ctx)
 }
 
-/** Send the brief to every user who opted into the email digest. */
-async function sendDigests(ctx: CronCtx, env: BriefEnv, brief: Brief): Promise<number> {
+/** Email the Edition (or the section digest as a fallback) to opted-in users. */
+async function sendDigests(
+  ctx: CronCtx,
+  env: BriefEnv,
+  brief: Brief,
+  edition: Edition | null,
+): Promise<number> {
   const prefs = (await ctx.records.query('preferences', { limit: 200 }))
     .map((r) => r.data as unknown as Preference)
     .filter((p) => p.emailEnabled === true && typeof p.email === 'string' && p.email.includes('@'))
@@ -505,8 +523,10 @@ async function sendDigests(ctx: CronCtx, env: BriefEnv, brief: Brief): Promise<n
   if (prefs.length === 0) return 0
 
   const from = env.DIGEST_FROM || 'Bellwether <onboarding@resend.dev>'
-  const subject = `Bellwether — ${brief.date}: ${brief.topMovers.length} movers, ${brief.trending.length} trending`
-  const html = renderDigestHtml(brief)
+  const subject = edition
+    ? `Bellwether — ${edition.headline}`
+    : `Bellwether — ${brief.date}: ${brief.topMovers.length} movers, ${brief.trending.length} trending`
+  const html = edition ? renderEditionEmail(edition) : renderDigestHtml(brief)
 
   let sent = 0
   for (const p of prefs.slice(0, 100)) {

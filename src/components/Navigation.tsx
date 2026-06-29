@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { AuthOverlay, useAuthProfileReady, signOut } from 'deepspace'
 import {
   Newspaper,
+  Coffee,
   Target,
   Trophy,
   Mail,
@@ -22,6 +23,7 @@ import { cn } from './ui/utils'
 import { useNotifications } from '../lib/useNotifications'
 
 const ICONS: Record<string, LucideIcon> = {
+  '/edition': Coffee,
   '/home': Newspaper,
   '/daily': Target,
   '/scorecard': Trophy,

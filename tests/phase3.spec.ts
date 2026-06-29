@@ -27,8 +27,8 @@ test('AI Analyst generates a news-sourced write-up', async ({ users }) => {
   await page.getByRole('button', { name: 'Open market briefing' }).first().click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
-  // Auto-generates: wait for the news-sourced analysis to land.
-  await expect(dialog.getByText(/The case for/i).first()).toBeVisible({ timeout: 45_000 })
+  // Auto-generates: wait for the news-sourced analysis to land (live news + LLM).
+  await expect(dialog.getByText(/The case for/i).first()).toBeVisible({ timeout: 70_000 })
   await expect(dialog.getByText(/What to watch/i)).toBeVisible()
   await page.screenshot({ path: 'test-results/analyst.png', fullPage: false })
 })
