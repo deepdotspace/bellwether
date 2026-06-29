@@ -21,10 +21,10 @@ export default function App() {
         <AuthBoot>
           {/* data-testid="app-root" is the canonical "app shell mounted" hook
               every test relies on. Don't rename without updating templates/tests. */}
-          <div data-testid="app-root" className="flex h-screen flex-col bg-background overflow-hidden">
+          <div data-testid="app-root" className="flex h-screen overflow-hidden bg-background">
             <Navigation />
-            <main className="flex-1 overflow-y-auto min-h-0">
-              <Suspense fallback={<div className="flex items-center justify-center h-full text-muted-foreground">Loading...</div>}>
+            <main className="min-h-0 flex-1 overflow-y-auto pt-14 lg:pt-0">
+              <Suspense fallback={<div className="flex h-full items-center justify-center text-muted-foreground">Loading...</div>}>
                 <Outlet />
               </Suspense>
             </main>

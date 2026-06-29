@@ -146,7 +146,14 @@ export interface MarketAnalysis {
   bearCase: string
   whatCouldMove: string
   summary: string
-  sources: { title: string; url: string; source: string; publishedAt?: string }[]
+  sources: {
+    title: string
+    url: string
+    source: string
+    publishedAt?: string
+    description?: string
+    image?: string
+  }[]
   generatedAt: number
 }
 

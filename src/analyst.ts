@@ -45,6 +45,7 @@ interface NewsArticle {
   description?: string
   url?: string
   publishedAt?: string
+  urlToImage?: string
 }
 
 /** Build a news query from the market, stripping date noise. */
@@ -76,20 +77,30 @@ export async function generateAnalysis(
   try {
     const news = await tools.integration<{ articles?: NewsArticle[] }>('newsapi/search-everything', {
       q: buildQuery(p),
-      pageSize: 6,
+      pageSize: 12,
       sortBy: 'relevancy',
       language: 'en',
       page: 1,
     })
     const articles = news.success ? news.data?.articles ?? [] : []
+    // De-dupe by title, prefer those with a snippet, keep the freshest 8.
+    const seen = new Set<string>()
     sources = articles
-      .filter((a) => a.title && a.url)
-      .slice(0, 6)
+      .filter((a) => {
+        if (!a.title || !a.url || a.title === '[Removed]') return false
+        const key = a.title.toLowerCase().slice(0, 60)
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .slice(0, 8)
       .map((a) => ({
         title: a.title!,
         url: a.url!,
         source: a.source?.name ?? 'Source',
         publishedAt: a.publishedAt,
+        description: a.description ?? undefined,
+        image: a.urlToImage ?? undefined,
       }))
   } catch {
     sources = []
@@ -99,7 +110,12 @@ export async function generateAnalysis(
   const pct = p.yesPrice != null ? `${Math.round(p.yesPrice * 100)}%` : 'unknown'
   const headlineBlock =
     sources.length > 0
-      ? sources.map((s, i) => `[${i + 1}] ${s.source}: ${s.title}`).join('\n')
+      ? sources
+          .map(
+            (s, i) =>
+              `[${i + 1}] ${s.source}: ${s.title}${s.description ? ` — ${s.description}` : ''}`,
+          )
+          .join('\n')
       : '(no recent headlines were retrieved)'
 
   const system =

@@ -5,7 +5,6 @@ import {
   Hourglass,
   RefreshCw,
   Star,
-  Bell,
   ArrowRight,
   Target,
 } from 'lucide-react'
@@ -203,21 +202,12 @@ function Header({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/digest"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-md transition-colors hover:bg-card"
-            >
-              <Bell className="h-4 w-4" aria-hidden />
-              Email digest
-            </Link>
-            {canRefresh && (
-              <Button variant="outline" loading={refreshing} onClick={onRefresh}>
-                <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
-                Refresh
-              </Button>
-            )}
-          </div>
+          {canRefresh && (
+            <Button variant="outline" loading={refreshing} onClick={onRefresh}>
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
+              Refresh
+            </Button>
+          )}
         </div>
       </div>
     </div>

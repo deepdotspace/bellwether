@@ -12,7 +12,6 @@ export type Path =
   | `/home`
   | `/inbox`
   | `/scorecard`
-  | `/settings`
   | `/u/:userId`
 
 export type Params = {
