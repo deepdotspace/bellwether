@@ -1,6 +1,8 @@
 import type { ActionHandler } from 'deepspace/worker'
 import type { Env } from '../../worker'
 import { buildDailyBrief, resolveCallsOnly } from '../brief-core'
+import { generateAnalysis, type AnalystTools } from '../analyst'
+import { etDateKey } from '../lib/date'
 
 /**
  * buildBrief — generate (or refresh) today's brief on demand.
@@ -48,7 +50,34 @@ const resolveCalls: ActionHandler<Env> = async ({ env }) => {
   }
 }
 
+/**
+ * analyzeMarket — generate (or return cached) AI Analyst write-up for a market.
+ * Signed-in only (it spends owner news + LLM credits); the result is cached
+ * publicly per market per day so repeat opens are free.
+ */
+const analyzeMarket: ActionHandler<Env> = async ({ tools, params }) => {
+  const marketId = String(params.marketId ?? '')
+  const question = String(params.question ?? '')
+  if (!marketId || !question) {
+    return { success: false, error: 'marketId and question are required' }
+  }
+  try {
+    const analysis = await generateAnalysis(tools as unknown as AnalystTools, {
+      marketId,
+      question,
+      eventTitle: params.eventTitle ? String(params.eventTitle) : undefined,
+      topic: params.topic ? String(params.topic) : undefined,
+      yesPrice: typeof params.yesPrice === 'number' ? params.yesPrice : undefined,
+      date: etDateKey(),
+    })
+    return { success: true, data: analysis }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to analyze market' }
+  }
+}
+
 export const actions: Record<string, ActionHandler<Env>> = {
   buildBrief,
   resolveCalls,
+  analyzeMarket,
 }

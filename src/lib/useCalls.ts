@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react'
 import { useQuery, useMutations, useAuth, getAuthToken } from 'deepspace'
 import type { BriefMarket, Call, ForecasterStats } from '../types'
 import { computeStats } from '../scoring'
+import { useStreak } from './useStreak'
 
 export interface LogCallInput {
   predictedProb: number
@@ -24,6 +25,7 @@ export function useCalls(): CallsApi {
   const { isSignedIn } = useAuth()
   const { records, status } = useQuery<Call>('calls')
   const { create, put, remove } = useMutations<Call>('calls')
+  const { bumpToday } = useStreak()
 
   const calls = useMemo(() => records ?? [], [records])
 
@@ -67,8 +69,10 @@ export function useCalls(): CallsApi {
         marketBrier: null,
         beatMarket: null,
       } as Call)
+      // Logging a new call counts toward today's streak.
+      await bumpToday()
     },
-    [byMarket, create, put],
+    [byMarket, create, put, bumpToday],
   )
 
   const removeCall = useCallback(

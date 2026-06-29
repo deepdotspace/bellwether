@@ -7,13 +7,17 @@ export type Path =
   | `*`
   | `/`
   | `/api-status`
+  | `/daily`
   | `/digest`
   | `/home`
+  | `/inbox`
   | `/scorecard`
   | `/settings`
+  | `/u/:userId`
 
 export type Params = {
   '/*': { '*': string }
+  '/u/:userId': { userId: string }
 }
 
 export type ModalPath = never

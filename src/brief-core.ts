@@ -228,9 +228,18 @@ function toBriefMarket(
  * Build (and persist) today's brief. Returns the brief plus a short report of
  * what happened, for logging / the action response.
  */
+const SWING_ALERT_THRESHOLD = 0.1 // 10 points overnight
+
 export async function buildDailyBrief(
   env: BriefEnv,
-): Promise<{ brief: Brief; emailsSent: number; usedHistoryFallback: boolean; callsResolved: number }> {
+  opts: { sendAlerts?: boolean } = {},
+): Promise<{
+  brief: Brief
+  emailsSent: number
+  usedHistoryFallback: boolean
+  callsResolved: number
+  swingAlerts: number
+}> {
   const ctx = buildCronContext(
     env as unknown as Parameters<typeof buildCronContext>[0],
     env.OWNER_USER_ID,
@@ -352,7 +361,17 @@ export async function buildDailyBrief(
     // Resolution is best-effort; don't fail the brief over it.
   }
 
-  // 9. Email digest to opted-in users.
+  // 9. Swing alerts to users following sharply-moving markets (cron only).
+  let swingAlerts = 0
+  if (opts.sendAlerts) {
+    try {
+      swingAlerts = await sendSwingAlerts(ctx, env, brief)
+    } catch {
+      // Best-effort.
+    }
+  }
+
+  // 10. Email digest to opted-in users.
   let emailsSent = 0
   try {
     emailsSent = await sendDigests(ctx, env, brief)
@@ -360,7 +379,111 @@ export async function buildDailyBrief(
     // Never fail the build because email delivery hiccuped.
   }
 
-  return { brief, emailsSent, usedHistoryFallback, callsResolved }
+  return { brief, emailsSent, usedHistoryFallback, callsResolved, swingAlerts }
+}
+
+/** Notify (+ email) users following markets/topics that swung sharply overnight. */
+async function sendSwingAlerts(ctx: CronCtx, env: BriefEnv, brief: Brief): Promise<number> {
+  const movers = brief.topMovers.filter(
+    (m) => m.delta != null && Math.abs(m.delta) >= SWING_ALERT_THRESHOLD,
+  )
+  if (movers.length === 0) return 0
+
+  const byMarketId = new Map(movers.map((m) => [m.marketId, m]))
+  const byTopic = new Map<string, BriefMarket>()
+  for (const m of movers) {
+    const cur = byTopic.get(m.topic)
+    if (m.topic && (!cur || Math.abs(m.delta!) > Math.abs(cur.delta!))) byTopic.set(m.topic, m)
+  }
+
+  const follows = (await ctx.records.query('follows', { limit: 2000 })).map(
+    (r) => r.data as unknown as { userId: string; targetType: string; targetId: string },
+  )
+  if (follows.length === 0) return 0
+
+  // userId → set of matched movers (dedup by marketId).
+  const perUser = new Map<string, Map<string, BriefMarket>>()
+  for (const f of follows) {
+    const match =
+      f.targetType === 'market' ? byMarketId.get(f.targetId) : byTopic.get(f.targetId)
+    if (!match || !f.userId) continue
+    const set = perUser.get(f.userId) ?? new Map<string, BriefMarket>()
+    set.set(match.marketId, match)
+    perUser.set(f.userId, set)
+  }
+  if (perUser.size === 0) return 0
+
+  // Email lookup for opted-in users.
+  const prefs = new Map<string, string>()
+  for (const r of await ctx.records.query('preferences', { limit: 500 })) {
+    const p = r.data as unknown as Preference
+    if (p.emailEnabled === true && typeof p.email === 'string' && p.email.includes('@')) {
+      prefs.set(p.userId, p.email)
+    }
+  }
+
+  const now = Date.now()
+  const from = env.DIGEST_FROM || 'Bellwether <onboarding@resend.dev>'
+  let count = 0
+
+  for (const [userId, set] of perUser) {
+    const markets = [...set.values()]
+    for (const m of markets) {
+      const dir = m.delta! >= 0 ? 'up' : 'down'
+      try {
+        await ctx.records.create('notifications', {
+          userId,
+          type: 'swing',
+          title: 'A market you follow swung',
+          body:
+            `“${m.question}” moved ${dir} ${Math.abs(m.delta! * 100).toFixed(0)} points ` +
+            `overnight to ${Math.round(m.yesPrice * 100)}%.`,
+          marketId: m.marketId,
+          slug: m.slug,
+          read: false,
+          createdAtMs: now,
+        })
+        count++
+      } catch {
+        // skip
+      }
+    }
+    const email = prefs.get(userId)
+    if (email) {
+      try {
+        await ctx.integrations.call('email/send', {
+          from,
+          to: email,
+          subject: `Bellwether alert — ${markets.length} followed market${markets.length === 1 ? '' : 's'} swung`,
+          html: renderSwingEmail(markets),
+        })
+      } catch {
+        // skip a bad address
+      }
+    }
+  }
+  return count
+}
+
+function renderSwingEmail(markets: BriefMarket[]): string {
+  const rows = markets
+    .map((m) => {
+      const up = (m.delta ?? 0) >= 0
+      return `<tr><td style="padding:10px 0;border-bottom:1px solid #1e293b;">
+        <div style="font-weight:600;color:#e2e8f0;font-size:15px;">${escapeHtml(m.question)}</div>
+        <div style="font-size:13px;color:${up ? '#16a34a' : '#dc2626'};font-weight:600;">
+          ${up ? '▲' : '▼'} ${Math.abs((m.delta ?? 0) * 100).toFixed(0)} pts → ${Math.round(m.yesPrice * 100)}%
+        </div></td></tr>`
+    })
+    .join('')
+  return `<div style="background:#0f172a;padding:24px;font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#e2e8f0;">
+    <div style="max-width:600px;margin:0 auto;">
+      <div style="font-family:Georgia,serif;font-size:24px;font-weight:700;">Bellwether</div>
+      <div style="color:#94a3b8;font-size:14px;margin-bottom:8px;">Markets you follow moved sharply overnight</div>
+      <table width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+      <div style="margin-top:20px;color:#64748b;font-size:12px;">Informational only — not financial advice.</div>
+    </div>
+  </div>`
 }
 
 /** Resolve + score open calls without rebuilding the brief (cheap, on-demand). */

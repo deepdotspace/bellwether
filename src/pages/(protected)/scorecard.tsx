@@ -14,7 +14,10 @@ import {
   TrendingUp,
   Check,
   X,
+  Share2,
+  Copy,
 } from 'lucide-react'
+import { useUser } from 'deepspace'
 import {
   Button,
   Card,
@@ -24,10 +27,12 @@ import {
   TabsTrigger,
   TabsContent,
   Badge,
+  Switch,
   EmptyState,
   useToast,
 } from '../../components/ui'
 import { useCalls, triggerResolveCalls } from '../../lib/useCalls'
+import { useMyProfile } from '../../lib/useProfile'
 import { formatPct, formatTopic, formatCloses } from '../../lib/format'
 import type { Call, ForecasterStats } from '../../types'
 import { cn } from '../../components/ui/utils'
@@ -104,6 +109,9 @@ export default function ScorecardPage() {
           <CalibrationCard stats={stats} />
           <CategoryCard stats={stats} />
         </div>
+
+        <PublishCard stats={stats} />
+
 
         <div className="mt-10">
           <Tabs defaultValue="open">
@@ -200,6 +208,93 @@ function StatTile({
       <div className="mt-1 text-4xl font-bold tabular-nums tracking-tight">{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
     </div>
+  )
+}
+
+function PublishCard({ stats }: { stats: ForecasterStats }) {
+  const { user } = useUser()
+  const { isPublic, publish } = useMyProfile(stats)
+  const { success, error: toastError } = useToast()
+  const [busy, setBusy] = useState(false)
+
+  const shareUrl = user?.id ? `${window.location.origin}/u/${user.id}` : ''
+
+  async function toggle(next: boolean) {
+    setBusy(true)
+    try {
+      await publish(next)
+      success(
+        next ? 'Profile published' : 'Profile hidden',
+        next ? 'Anyone with your link can see your forecasting record.' : 'Your profile is private again.',
+      )
+    } catch (e) {
+      toastError('Could not update profile', e instanceof Error ? e.message : 'Request failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function republish() {
+    setBusy(true)
+    try {
+      await publish(true)
+      success('Profile refreshed', 'Your public stats now match your latest scorecard.')
+    } catch (e) {
+      toastError('Could not refresh', e instanceof Error ? e.message : 'Request failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function copyLink() {
+    if (!shareUrl) return
+    void navigator.clipboard.writeText(shareUrl)
+    success('Link copied', shareUrl)
+  }
+
+  return (
+    <Card className="mt-6">
+      <CardContent className="p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-inset ring-primary/20">
+              <Share2 className="h-4 w-4" aria-hidden />
+            </span>
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Public profile</h2>
+              <p className="text-xs text-muted-foreground">
+                Share a read-only page of your forecasting record — accuracy, skill, and your
+                sharpest categories.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {!user?.id ? 'Loading…' : isPublic ? 'Public' : 'Private'}
+            </span>
+            <Switch
+              checked={isPublic}
+              disabled={busy || !user?.id}
+              onCheckedChange={toggle}
+              aria-label="Make profile public"
+            />
+          </div>
+        </div>
+
+        {isPublic && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
+            <code className="flex-1 truncate text-xs text-muted-foreground">{shareUrl}</code>
+            <Button size="sm" variant="outline" onClick={copyLink}>
+              <Copy className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+              Copy
+            </Button>
+            <Button size="sm" variant="ghost" loading={busy} onClick={republish}>
+              Refresh stats
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

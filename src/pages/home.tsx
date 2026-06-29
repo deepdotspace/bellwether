@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react'
-import { TrendingUp, Flame, Hourglass, RefreshCw, Star, Bell } from 'lucide-react'
+import {
+  TrendingUp,
+  Flame,
+  Hourglass,
+  RefreshCw,
+  Star,
+  Bell,
+  ArrowRight,
+  Target,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from 'deepspace'
 import {
@@ -13,14 +22,24 @@ import {
   useToast,
 } from '../components/ui'
 import MarketCard from '../components/MarketCard'
-import { useLatestBrief, useFollows, triggerBuildBrief } from '../lib/useBrief'
+import {
+  useLatestBrief,
+  useFollows,
+  triggerBuildBrief,
+  selectDailyFive,
+} from '../lib/useBrief'
+import { useCalls } from '../lib/useCalls'
+import { useStreak } from '../lib/useStreak'
 import { formatBriefDate } from '../lib/format'
-import type { BriefMarket } from '../types'
+import { cn } from '../components/ui/utils'
+import type { Brief, BriefMarket } from '../types'
 
 export default function HomePage() {
   const { isSignedIn } = useAuth()
   const { brief, loading } = useLatestBrief()
   const { follows, isFollowing } = useFollows()
+  const { byMarket } = useCalls()
+  const { streak, active } = useStreak()
   const { success, error: toastError, info } = useToast()
   const [refreshing, setRefreshing] = useState(false)
 
@@ -77,6 +96,14 @@ export default function HomePage() {
           <NoBrief canRefresh={isSignedIn} refreshing={refreshing} onRefresh={handleRefresh} />
         ) : (
           <Tabs defaultValue="all" className="mt-8">
+            {isSignedIn && (
+              <DailyBanner
+                brief={brief}
+                doneCount={selectDailyFive(brief).filter((m) => byMarket.has(m.marketId)).length}
+                streak={streak?.currentStreak ?? 0}
+                streakActive={active}
+              />
+            )}
             <TabsList>
               <TabsTrigger value="all">Today&apos;s brief</TabsTrigger>
               <TabsTrigger value="following">
@@ -194,6 +221,57 @@ function Header({
         </div>
       </div>
     </div>
+  )
+}
+
+function DailyBanner({
+  brief,
+  doneCount,
+  streak,
+  streakActive,
+}: {
+  brief: Brief
+  doneCount: number
+  streak: number
+  streakActive: boolean
+}) {
+  const total = selectDailyFive(brief).length
+  if (total === 0) return null
+  const complete = doneCount === total
+  return (
+    <Link
+      to="/daily"
+      className="group mb-6 flex items-center gap-4 rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card px-5 py-4 transition-colors hover:border-primary/50"
+    >
+      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/20 text-primary ring-1 ring-inset ring-primary/30">
+        <Target className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          The Daily Five
+          {streak > 0 && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                streakActive ? 'bg-amber-500/15 text-amber-400' : 'bg-muted text-muted-foreground',
+              )}
+            >
+              <Flame className="h-3 w-3" aria-hidden />
+              {streak}-day streak
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {complete
+            ? "You've forecasted all five today. Nice."
+            : `${doneCount} of ${total} forecasted today — keep your streak alive.`}
+        </div>
+      </div>
+      <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+        {complete ? 'Review' : 'Forecast'}
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+      </span>
+    </Link>
   )
 }
 

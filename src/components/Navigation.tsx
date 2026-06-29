@@ -8,6 +8,7 @@ import { ROLE_CONFIG, type Role } from '../constants'
 import { nav } from '../nav'
 import { Skeleton, SkeletonAvatar } from './ui'
 import { cn } from './ui/utils'
+import NotificationBell from './NotificationBell'
 
 export default function Navigation() {
   const { isLoaded, isSignedIn, user, userLoading } = useAuthProfileReady({ requireUser: true })
@@ -94,6 +95,8 @@ export default function Navigation() {
                 {roleConfig.title}
               </span>
             )}
+
+            {isSignedIn && <NotificationBell />}
 
             {!isLoaded ? (
               <Skeleton className="h-8 w-20 rounded-full" />

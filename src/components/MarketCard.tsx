@@ -1,7 +1,9 @@
-import { Star, TrendingUp, TrendingDown, Minus, Clock, BarChart3 } from 'lucide-react'
+import { useState } from 'react'
+import { Star, TrendingUp, TrendingDown, Minus, Clock, BarChart3, Newspaper } from 'lucide-react'
 import type { BriefMarket } from '../types'
 import { useFollows } from '../lib/useBrief'
 import CallControl from './CallControl'
+import AnalystModal from './AnalystModal'
 import {
   formatPct,
   formatDelta,
@@ -15,6 +17,7 @@ const POLYMARKET_BASE = 'https://polymarket.com/market/'
 
 export default function MarketCard({ market }: { market: BriefMarket }) {
   const { isFollowing, toggle, canFollow } = useFollows()
+  const [analystOpen, setAnalystOpen] = useState(false)
   const followed = isFollowing('market', market.marketId)
   const topicFollowed = market.topic ? isFollowing('topic', market.topic) : false
 
@@ -47,24 +50,31 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
           <span className="truncate">{formatTopic(market.topic)}</span>
         </button>
 
-        {canFollow && (
+        <div className="flex shrink-0 items-center gap-0.5">
           <button
             type="button"
-            onClick={() =>
-              toggle('market', market.marketId, market.question, market.image)
-            }
-            aria-pressed={followed}
-            aria-label={followed ? 'Unfollow market' : 'Follow market'}
-            className={cn(
-              'shrink-0 rounded-full p-1.5 transition-colors',
-              followed
-                ? 'text-amber-400'
-                : 'text-muted-foreground hover:text-amber-400',
-            )}
+            onClick={() => setAnalystOpen(true)}
+            aria-label="Open AI Analyst"
+            title="AI Analyst — news-sourced bull/bear"
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
           >
-            <Star className={cn('h-4 w-4', followed && 'fill-current')} />
+            <Newspaper className="h-4 w-4" />
           </button>
-        )}
+          {canFollow && (
+            <button
+              type="button"
+              onClick={() => toggle('market', market.marketId, market.question, market.image)}
+              aria-pressed={followed}
+              aria-label={followed ? 'Unfollow market' : 'Follow market'}
+              className={cn(
+                'rounded-full p-1.5 transition-colors',
+                followed ? 'text-amber-400' : 'text-muted-foreground hover:text-amber-400',
+              )}
+            >
+              <Star className={cn('h-4 w-4', followed && 'fill-current')} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Question */}
@@ -120,6 +130,10 @@ export default function MarketCard({ market }: { market: BriefMarket }) {
           {formatCloses(market.endDate)}
         </span>
       </div>
+
+      {analystOpen && (
+        <AnalystModal market={market} canGenerate={canFollow} onClose={() => setAnalystOpen(false)} />
+      )}
     </div>
   )
 }

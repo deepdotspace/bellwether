@@ -115,6 +115,55 @@ export interface Call {
   beatMarket: boolean | null
 }
 
+/** Per-user daily forecasting streak. */
+export interface Streak {
+  userId: string
+  currentStreak: number
+  longestStreak: number
+  /** ET date (YYYY-MM-DD) of the most recent day the user logged a call. */
+  lastCallDate: string
+  updatedAtMs: number
+}
+
+/** A user-facing notification (resolution recap or swing alert). Server-written. */
+export interface AppNotification {
+  userId: string
+  type: 'resolution' | 'swing'
+  title: string
+  body: string
+  marketId: string
+  slug: string
+  read: boolean
+  createdAtMs: number
+}
+
+/** Cached AI Analyst write-up for a market (per market per day). Public-read. */
+export interface MarketAnalysis {
+  marketId: string
+  date: string
+  question: string
+  bullCase: string
+  bearCase: string
+  whatCouldMove: string
+  summary: string
+  sources: { title: string; url: string; source: string; publishedAt?: string }[]
+  generatedAt: number
+}
+
+/** A user's publishable forecaster profile (public snapshot of their scorecard). */
+export interface ForecasterProfile {
+  userId: string
+  name: string
+  /** 'public' makes the profile visible to everyone via /u/:userId. */
+  visibility: 'public' | 'private'
+  accuracy: number
+  skillScore: number
+  beatMarketRate: number
+  resolved: number
+  topCategories: { topic: string; accuracy: number; resolved: number }[]
+  updatedAtMs: number
+}
+
 /** Aggregate forecaster stats computed from a user's resolved calls. */
 export interface ForecasterStats {
   total: number

@@ -2,7 +2,30 @@
 
 import { useCallback, useMemo } from 'react'
 import { useQuery, useMutations, useAuth, getAuthToken } from 'deepspace'
-import type { Brief, Follow, Preference } from '../types'
+import type { Brief, BriefMarket, Follow, Preference } from '../types'
+
+/**
+ * Pick a stable, varied "Daily Five" from a brief — the day's forecasting
+ * challenge. Interleaves the three sections for topic variety and prefers
+ * markets that close sooner (so they resolve and feed the score loop).
+ */
+export function selectDailyFive(brief: Brief | null, count = 5): BriefMarket[] {
+  if (!brief) return []
+  const seen = new Set<string>()
+  const ordered: BriefMarket[] = []
+  const lanes = [brief.closingSoon, brief.topMovers, brief.trending]
+  // Round-robin across sections for variety.
+  for (let i = 0; i < Math.max(...lanes.map((l) => l.length), 0); i++) {
+    for (const lane of lanes) {
+      const m = lane[i]
+      if (m && !seen.has(m.marketId)) {
+        seen.add(m.marketId)
+        ordered.push(m)
+      }
+    }
+  }
+  return ordered.slice(0, count)
+}
 
 /** The most recent published brief (briefs are keyed by date). */
 export function useLatestBrief(): { brief: Brief | null; loading: boolean } {

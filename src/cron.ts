@@ -18,11 +18,11 @@ export const tasks: CronTask[] = [
 
 export async function runTask(name: string, env: Env): Promise<void> {
   if (name === 'daily-brief') {
-    const result = await buildDailyBrief(env)
+    const result = await buildDailyBrief(env, { sendAlerts: true })
     console.log(
       `[bellwether] brief ${etDateKey()} built — ${result.brief.marketCount} markets, ` +
         `${result.brief.topMovers.length} movers, ${result.callsResolved} calls resolved, ` +
-        `${result.emailsSent} emails sent` +
+        `${result.swingAlerts} swing alerts, ${result.emailsSent} emails sent` +
         (result.usedHistoryFallback ? ' (history fallback)' : ''),
     )
   }

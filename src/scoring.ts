@@ -106,6 +106,7 @@ interface ResolveCtx {
       { recordId: string; data: Record<string, unknown> }[]
     >
     update: (collection: string, recordId: string, data: Record<string, unknown>) => Promise<unknown>
+    create: (collection: string, data: Record<string, unknown>) => Promise<unknown>
   }
   integrations: { call: <T = unknown>(endpoint: string, params?: Record<string, unknown>) => Promise<T> }
 }
@@ -171,15 +172,38 @@ export async function resolveOpenCalls(ctx: ResolveCtx): Promise<number> {
 
     const b = brier(data.predictedProb, res.outcome)
     const mb = brier(data.marketProbAtCall, res.outcome)
+    const beat = b < mb
     await ctx.records.update('calls', row.recordId, {
       status: 'resolved',
       resolvedOutcome: res.outcome,
       resolvedAt: now,
       brier: b,
       marketBrier: mb,
-      beatMarket: b < mb,
+      beatMarket: beat,
     })
     resolvedCount++
+
+    // Resolution recap notification for the forecaster.
+    try {
+      const primary = data.outcomes?.[0] ?? 'Yes'
+      const secondary = data.outcomes?.[1] ?? 'No'
+      const won = res.outcome === 1 ? primary : secondary
+      const correct = data.predictedProb !== 0.5 && data.predictedProb > 0.5 === (res.outcome === 1)
+      await ctx.records.create('notifications', {
+        userId: data.userId,
+        type: 'resolution',
+        title: correct ? 'You called it' : 'A call resolved',
+        body:
+          `You said ${Math.round(data.predictedProb * 100)}% ${primary} on “${data.question}”. ` +
+          `It resolved ${won} — ${beat ? 'you beat the market.' : 'the market edged you out.'}`,
+        marketId: data.marketId,
+        slug: data.slug ?? '',
+        read: false,
+        createdAtMs: now,
+      })
+    } catch {
+      // A missing recap shouldn't block scoring.
+    }
   }
   return resolvedCount
 }
