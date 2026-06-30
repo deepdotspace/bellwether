@@ -8,8 +8,8 @@ export type Path =
   | `/`
   | `/api-status`
   | `/daily`
-  | `/digest`
   | `/edition`
+  | `/email`
   | `/home`
   | `/inbox`
   | `/scorecard`

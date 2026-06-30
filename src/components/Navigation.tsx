@@ -28,7 +28,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/daily': Target,
   '/scorecard': Trophy,
   '/inbox': InboxIcon,
-  '/digest': Mail,
+  '/email': Mail,
   '/api-status': Activity,
 }
 

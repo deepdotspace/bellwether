@@ -3,14 +3,13 @@
  * threads the top markets and their coverage together. Public.
  */
 
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { TrendingUp, TrendingDown, ArrowUpRight, Newspaper, ArrowRight } from 'lucide-react'
+import { ArrowUpRight, Newspaper, ArrowRight } from 'lucide-react'
 import { Button, EmptyState, Skeleton } from '../components/ui'
+import OddsPanel from '../components/OddsPanel'
 import { useLatestEdition } from '../lib/useEdition'
-import { formatBriefDate, formatPct, formatTopic } from '../lib/format'
+import { formatBriefDate, formatTopic } from '../lib/format'
 import type { Edition, EditionStory } from '../types'
-import { cn } from '../components/ui/utils'
 
 const POLYMARKET_BASE = 'https://polymarket.com/market/'
 
@@ -100,11 +99,6 @@ function Masthead({ edition }: { edition: Edition }) {
 }
 
 function Story({ story, index }: { story: EditionStory; index: number }) {
-  const delta = story.delta
-  const up = delta != null && delta > 0.0005
-  const down = delta != null && delta < -0.0005
-  const Icon = up ? TrendingUp : down ? TrendingDown : null
-
   return (
     <section>
       <div className="flex items-baseline gap-3">
@@ -125,26 +119,12 @@ function Story({ story, index }: { story: EditionStory; index: number }) {
         </h2>
       </a>
 
-      {/* Odds line */}
-      <div className="mt-2 flex items-center gap-3 text-sm">
-        <span className="font-medium text-foreground">
-          {story.outcomes[0] ?? 'Yes'} {formatPct(story.yesPrice)}
-        </span>
-        {Icon && delta != null && (
-          <span
-            className={cn(
-              'inline-flex items-center gap-1 font-semibold tabular-nums',
-              up ? 'text-emerald-400' : 'text-rose-400',
-            )}
-          >
-            <Icon className="h-4 w-4" aria-hidden />
-            {up ? '+' : '−'}
-            {Math.abs(delta * 100).toFixed(1)} pts overnight
-          </span>
-        )}
-      </div>
-
-      <StoryImage story={story} />
+      <OddsPanel
+        className="mt-4"
+        outcomeLabel={story.outcomes[0] ?? 'Yes'}
+        yesPrice={story.yesPrice}
+        delta={story.delta}
+      />
 
       <p className="mt-4 text-[1.05rem] leading-relaxed text-foreground/90">{story.take}</p>
 
@@ -168,20 +148,6 @@ function Story({ story, index }: { story: EditionStory; index: number }) {
         </div>
       )}
     </section>
-  )
-}
-
-function StoryImage({ story }: { story: EditionStory }) {
-  const [broken, setBroken] = useState(false)
-  if (!story.image || broken) return null
-  return (
-    <img
-      src={story.image}
-      alt=""
-      referrerPolicy="no-referrer"
-      onError={() => setBroken(true)}
-      className="mt-4 aspect-[16/8] w-full rounded-xl object-cover ring-1 ring-inset ring-border"
-    />
   )
 }
 

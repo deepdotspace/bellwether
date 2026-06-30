@@ -233,10 +233,13 @@ function renderStory(s: EditionStory, i: number): string {
         `<a href="${escapeHtml(src.url)}" style="color:#7dd3fc;text-decoration:none;">${escapeHtml(src.source)}</a>`,
     )
     .join(' &nbsp;·&nbsp; ')
-  return `<tr><td style="padding:18px 0;border-bottom:1px solid #1e293b;">
+  return `<tr><td style="padding:18px 0;border-bottom:1px solid #23202a;">
     <div style="font-size:12px;color:#d8b36a;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">${i + 1} · ${escapeHtml(s.topic || 'Markets')}</div>
     <div style="font-size:17px;font-weight:700;color:#ece9e3;margin:4px 0;">${escapeHtml(s.question)}</div>
-    <div style="font-size:13px;color:#989389;margin-bottom:8px;">${s.outcomes[0] ?? 'Yes'} ${pct}% &nbsp; ${deltaStr}</div>
+    <div style="font-size:13px;color:#989389;margin-bottom:6px;">${escapeHtml(s.outcomes[0] ?? 'Yes')} ${pct}% &nbsp; ${deltaStr}</div>
+    <div style="height:8px;background:rgba(236,233,227,0.10);border-radius:4px;margin-bottom:10px;">
+      <div style="height:8px;width:${Math.max(2, Math.min(100, pct))}%;background:#d8b36a;border-radius:4px;font-size:0;line-height:0;">&nbsp;</div>
+    </div>
     <div style="font-size:15px;line-height:1.6;color:#cdc8be;">${escapeHtml(s.take)}</div>
     ${links ? `<div style="font-size:12px;color:#64748b;margin-top:8px;">In the news: ${links}</div>` : ''}
   </td></tr>`

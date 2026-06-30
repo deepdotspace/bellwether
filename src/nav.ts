@@ -21,7 +21,7 @@ export const nav: NavItem[] = [
   { path: '/daily', label: 'Daily Five' },
   { path: '/scorecard', label: 'Scorecard' },
   { path: '/inbox', label: 'Inbox', roles: ['member', 'admin'] },
-  { path: '/digest', label: 'Digest' },
+  { path: '/email', label: 'Email' },
   { path: '/api-status', label: 'API Status', devOnly: true },
   // ── Features add nav items below this line ──
 ]

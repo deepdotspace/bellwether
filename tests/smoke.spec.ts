@@ -42,11 +42,11 @@ test.describe('Smoke tests', () => {
     await expect(movers.or(empty).first()).toBeVisible({ timeout: 15000 })
   })
 
-  test('digest link is in the nav', async ({ page }) => {
+  test('email link is in the nav', async ({ page }) => {
     await page.goto('/')
     await waitForApp(page)
     await expect(
-      page.getByTestId('app-navigation').getByRole('link', { name: 'Digest', exact: true }),
+      page.getByTestId('app-navigation').getByRole('link', { name: 'Email', exact: true }),
     ).toBeVisible()
   })
 

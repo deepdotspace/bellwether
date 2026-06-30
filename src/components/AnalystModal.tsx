@@ -10,6 +10,7 @@ import {
   Radio,
 } from 'lucide-react'
 import { Modal, Button, Skeleton } from './ui'
+import OddsPanel from './OddsPanel'
 import { useAnalysis } from '../lib/useAnalysis'
 import { useCalls } from '../lib/useCalls'
 import type { BriefMarket, MarketAnalysis } from '../types'
@@ -77,9 +78,15 @@ export default function AnalystModal({
       <Modal.Body>
         <p className="text-[1.05rem] font-medium leading-snug text-foreground">{market.question}</p>
         <p className="mt-1.5 text-xs text-muted-foreground">
-          {market.outcomes[0] ?? 'Yes'} trades at {formatPct(market.yesPrice)} · we read the latest
-          coverage so you don&apos;t have to — not advice
+          We read the latest coverage so you don&apos;t have to — not advice.
         </p>
+
+        <OddsPanel
+          className="mt-4"
+          outcomeLabel={market.outcomes[0] ?? 'Yes'}
+          yesPrice={market.yesPrice}
+          delta={market.delta}
+        />
 
         {generating && !analysis ? (
           <LoadingState />

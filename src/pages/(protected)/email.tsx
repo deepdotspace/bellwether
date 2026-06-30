@@ -1,5 +1,5 @@
 /**
- * /digest — per-user email digest preferences plus a one-click brief refresh.
+ * /email — per-user settings for the Edition email + a one-click rebuild.
  * Gated by (protected)/_layout.tsx.
  */
 
@@ -23,7 +23,7 @@ import {
 } from '../../components/ui'
 import { usePreference, triggerBuildBrief } from '../../lib/useBrief'
 
-export default function DigestPage() {
+export default function EmailPage() {
   const { user } = useUser()
   const { pref, save } = usePreference()
   const { success, error: toastError, info } = useToast()
@@ -58,8 +58,10 @@ export default function DigestPage() {
     try {
       await save({ emailEnabled: enabled, email })
       success(
-        enabled ? 'Digest on' : 'Digest off',
-        enabled ? `You'll get the brief at ${email} each morning.` : 'You will no longer receive the email digest.',
+        enabled ? 'Email on' : 'Email off',
+        enabled
+          ? `You'll get the Edition at ${email} each morning.`
+          : 'You will no longer receive the Edition email.',
       )
     } catch (e) {
       toastError('Could not save', e instanceof Error ? e.message : 'Request failed')
@@ -85,27 +87,27 @@ export default function DigestPage() {
   return (
     <div className="min-h-full bg-background text-foreground">
       <div className="mx-auto max-w-2xl px-6 py-16">
-        <h1 className="font-serif text-3xl font-bold tracking-tight">Email digest</h1>
+        <h1 className="font-serif text-3xl font-bold tracking-tight">Email</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Get Bellwether&apos;s brief — top movers, trending, and closing-soon markets —
-          delivered each morning.
+          Get the Edition — Bellwether&apos;s editorial morning read — delivered to your inbox
+          each day.
         </p>
 
         <Card className="mt-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-primary" aria-hidden />
-              Morning digest
+              The Edition, in your inbox
             </CardTitle>
-            <CardDescription>Sent daily after the 6:30am ET brief is built.</CardDescription>
+            <CardDescription>Sent daily after the 6:30am ET edition is written.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
               <div>
-                <div className="text-sm font-medium">Email me the daily brief</div>
-                <div className="text-xs text-muted-foreground">Turn the digest on or off.</div>
+                <div className="text-sm font-medium">Email me the daily Edition</div>
+                <div className="text-xs text-muted-foreground">Turn the morning email on or off.</div>
               </div>
-              <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable email digest" />
+              <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable the Edition email" />
             </div>
 
             <div className="space-y-2">
