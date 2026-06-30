@@ -156,14 +156,25 @@ export async function resolveOpenCalls(ctx: ResolveCtx): Promise<number> {
   const openRows = await ctx.records.query('calls', { where: { status: 'open' }, limit: 1000 })
   if (openRows.length === 0) return 0
 
-  // Look up each distinct market once.
-  const marketIds = [...new Set(openRows.map((r) => String(r.data.marketId)))]
+  const now = Date.now()
+  // A market can't resolve before it closes — only spend a lookup on markets at
+  // or past their end date (1h grace). Keeps the every-few-hours run cheap.
+  const marketIds = [
+    ...new Set(
+      openRows
+        .filter((r) => {
+          const e = Date.parse(String(r.data.endDate ?? ''))
+          return !Number.isFinite(e) || e <= now + 60 * 60 * 1000
+        })
+        .map((r) => String(r.data.marketId)),
+    ),
+  ]
+  if (marketIds.length === 0) return 0
+
   const resolutions = new Map<string, Resolution>()
   for (const id of marketIds) {
     resolutions.set(id, await fetchResolution(ctx, id))
   }
-
-  const now = Date.now()
   let resolvedCount = 0
   for (const row of openRows) {
     const data = row.data as unknown as Call

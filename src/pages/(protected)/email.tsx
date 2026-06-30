@@ -99,7 +99,7 @@ export default function EmailPage() {
               <Mail className="h-5 w-5 text-primary" aria-hidden />
               The Edition, in your inbox
             </CardTitle>
-            <CardDescription>Sent daily after the 6:30am ET edition is written.</CardDescription>
+            <CardDescription>Sent once a day, automatically, when the Edition is written.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
@@ -138,7 +138,8 @@ export default function EmailPage() {
               Refresh the brief
             </CardTitle>
             <CardDescription>
-              The brief rebuilds automatically every morning. Owners can rebuild it now.
+              The brief refreshes automatically through the day. Owners can force a full
+              rebuild (brief + Edition) now.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,10 +1,17 @@
 /**
  * Cron tasks for Bellwether.
  *
- * `daily-brief` runs each morning: it snapshots Polymarket odds, diffs against
- * yesterday for overnight movers, writes the AI blurbs, publishes the day's
- * brief, and emails opted-in users. The heavy lifting lives in
- * `src/brief-core.ts` so the buildBrief action can reuse the exact same logic.
+ * `daily-brief` runs every few hours: it snapshots Polymarket odds, diffs for
+ * overnight movers, writes the AI blurbs, and publishes the day's brief. The
+ * editorial Edition + email + swing alerts inside it are gated to fire only
+ * once per day (first run), so intraday refreshes keep odds current without
+ * re-spamming. The heavy lifting lives in `src/brief-core.ts` so the buildBrief
+ * action can reuse the exact same logic.
+ *
+ * Why an interval (not a 6:30am cron)? A DO alarm only arms when the cron DO is
+ * first constructed. `<CronKeepAlive>` in the app shell wakes it on load, and an
+ * interval task fires immediately on that first arm — so today's content builds
+ * as soon as anyone opens the app, with no missed-window gap.
  */
 
 import type { CronTask } from 'deepspace/worker'
@@ -12,8 +19,8 @@ import { buildDailyBrief, etDateKey } from './brief-core'
 import type { Env } from '../worker'
 
 export const tasks: CronTask[] = [
-  // 6:30am US Eastern — after overnight order flow, before the day starts.
-  { name: 'daily-brief', schedule: '30 6 * * *', timezone: 'America/New_York' },
+  // Every 6 hours — fires immediately on first arm, then keeps odds current.
+  { name: 'daily-brief', intervalMinutes: 360 },
 ]
 
 export async function runTask(name: string, env: Env): Promise<void> {

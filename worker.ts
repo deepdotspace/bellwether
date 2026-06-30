@@ -154,6 +154,30 @@ export type AppContext = { Bindings: Env }
 // =============================================================================
 
 const app = new Hono<AppContext>()
+
+// Wake the cron Durable Object once per worker instance. CronRoom only arms its
+// alarm when constructed, and nothing else touches that DO — so without this the
+// daily-brief task would never start. Fetching the DO (even with a throwaway
+// request) runs its constructor → arms the alarm; the `daily-brief` interval task
+// then fires immediately. Guarded so it costs one subrequest per instance.
+let cronArmed = false
+app.use('*', async (c, next) => {
+  if (!cronArmed) {
+    cronArmed = true
+    try {
+      const id = c.env.CRON_ROOMS.idFromName(`app:${c.env.APP_NAME}`)
+      c.executionCtx.waitUntil(
+        c.env.CRON_ROOMS.get(id)
+          .fetch('https://cron-arm/')
+          .catch(() => {}),
+      )
+    } catch {
+      cronArmed = false // let a later request retry if wiring wasn't ready
+    }
+  }
+  await next()
+})
+
 app.use('/api/*', cors())
 
 // ---------------------------------------------------------------------------

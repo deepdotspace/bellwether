@@ -1,33 +1,17 @@
-import { useMemo, useState } from 'react'
-import {
-  TrendingUp,
-  Flame,
-  Hourglass,
-  RefreshCw,
-  Star,
-  ArrowRight,
-  Target,
-  Coffee,
-} from 'lucide-react'
+import { useMemo } from 'react'
+import { TrendingUp, Flame, Hourglass, Star, ArrowRight, Target, Coffee } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from 'deepspace'
 import {
-  Button,
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
   EmptyState,
   SkeletonCard,
-  useToast,
 } from '../components/ui'
 import MarketCard from '../components/MarketCard'
-import {
-  useLatestBrief,
-  useFollows,
-  triggerBuildBrief,
-  selectDailyFive,
-} from '../lib/useBrief'
+import { useLatestBrief, useFollows, selectDailyFive } from '../lib/useBrief'
 import { useCalls } from '../lib/useCalls'
 import { useStreak } from '../lib/useStreak'
 import { useLatestEdition } from '../lib/useEdition'
@@ -42,8 +26,6 @@ export default function HomePage() {
   const { byMarket } = useCalls()
   const { streak, active } = useStreak()
   const { edition } = useLatestEdition()
-  const { success, error: toastError, info } = useToast()
-  const [refreshing, setRefreshing] = useState(false)
 
   const allMarkets = useMemo<BriefMarket[]>(() => {
     if (!brief) return []
@@ -64,38 +46,15 @@ export default function HomePage() {
     [allMarkets, isFollowing],
   )
 
-  async function handleRefresh() {
-    setRefreshing(true)
-    info('Building brief…', 'Pulling fresh odds and writing blurbs.')
-    try {
-      const res = await triggerBuildBrief()
-      if (res.success) {
-        success('Brief updated', "Today's brief has been refreshed.")
-      } else {
-        toastError('Could not build brief', res.error ?? 'Unknown error')
-      }
-    } catch (e) {
-      toastError('Could not build brief', e instanceof Error ? e.message : 'Request failed')
-    } finally {
-      setRefreshing(false)
-    }
-  }
-
   return (
     <div className="relative min-h-full bg-background text-foreground">
-      <Header
-        date={brief?.date}
-        marketCount={brief?.marketCount}
-        canRefresh={isSignedIn}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-      />
+      <Header date={brief?.date} marketCount={brief?.marketCount} />
 
       <div className="mx-auto max-w-6xl px-6 pb-24">
         {loading ? (
           <SectionSkeleton />
         ) : !brief ? (
-          <NoBrief canRefresh={isSignedIn} refreshing={refreshing} onRefresh={handleRefresh} />
+          <NoBrief />
         ) : (
           <Tabs defaultValue="all" className="mt-8">
             {edition && (
@@ -190,19 +149,7 @@ export default function HomePage() {
   )
 }
 
-function Header({
-  date,
-  marketCount,
-  canRefresh,
-  refreshing,
-  onRefresh,
-}: {
-  date?: string
-  marketCount?: number
-  canRefresh: boolean
-  refreshing: boolean
-  onRefresh: () => void
-}) {
+function Header({ date, marketCount }: { date?: string; marketCount?: number }) {
   return (
     <div className="relative overflow-hidden border-b border-border">
       <div
@@ -227,15 +174,10 @@ function Header({
                   <span>{marketCount} markets scanned</span>
                 </>
               )}
+              <span aria-hidden>·</span>
+              <span>refreshes automatically</span>
             </div>
           </div>
-
-          {canRefresh && (
-            <Button variant="outline" loading={refreshing} onClick={onRefresh}>
-              <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
-              Refresh
-            </Button>
-          )}
         </div>
       </div>
     </div>
@@ -332,30 +274,13 @@ function BriefSection({
   )
 }
 
-function NoBrief({
-  canRefresh,
-  refreshing,
-  onRefresh,
-}: {
-  canRefresh: boolean
-  refreshing: boolean
-  onRefresh: () => void
-}) {
+function NoBrief() {
   return (
     <div className="mt-16">
       <EmptyState
         icon={<TrendingUp className="h-6 w-6" />}
-        title="No brief published yet"
-        description={
-          canRefresh
-            ? 'Generate the first brief — it pulls live odds from Polymarket and writes a short read on each market.'
-            : 'The daily brief is built each morning. Check back shortly.'
-        }
-        action={
-          canRefresh
-            ? { label: refreshing ? 'Building…' : "Generate today's brief", onClick: onRefresh }
-            : undefined
-        }
+        title="Today's brief is being prepared"
+        description="Bellwether is pulling live odds from Polymarket and writing a short read on each market. This builds automatically — give it a moment and refresh the page."
       />
     </div>
   )

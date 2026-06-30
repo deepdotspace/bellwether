@@ -234,7 +234,7 @@ const SWING_ALERT_THRESHOLD = 0.1 // 10 points overnight
 
 export async function buildDailyBrief(
   env: BriefEnv,
-  opts: { sendAlerts?: boolean } = {},
+  opts: { sendAlerts?: boolean; forceEdition?: boolean } = {},
 ): Promise<{
   brief: Brief
   emailsSent: number
@@ -364,32 +364,42 @@ export async function buildDailyBrief(
     // Resolution is best-effort; don't fail the brief over it.
   }
 
-  // 9. Compose the editorial "Edition" — the threaded morning read.
+  // 9. Compose the editorial "Edition" — ONCE per day. The brief above refreshes
+  //    on every run (cheap, keeps odds current); the edition + email + alerts are
+  //    the daily morning beats, so they only fire the first time today's edition
+  //    is missing (or when an owner forces a full rebuild).
+  const existingEdition = await ctx.records.query('editions', { where: { date }, limit: 1 })
+  const editionExisted = existingEdition.length > 0
   let editionBuilt = false
   let edition = null
-  try {
-    edition = await buildEdition(ctx, brief, date)
-    editionBuilt = true
-  } catch {
-    // The brief stands on its own if the edition can't be written.
-  }
-
-  // 10. Swing alerts to users following sharply-moving markets (cron only).
-  let swingAlerts = 0
-  if (opts.sendAlerts) {
+  if (opts.forceEdition || !editionExisted) {
     try {
-      swingAlerts = await sendSwingAlerts(ctx, env, brief)
+      edition = await buildEdition(ctx, brief, date)
+      editionBuilt = true
     } catch {
-      // Best-effort.
+      // The brief stands on its own if the edition can't be written.
     }
   }
 
-  // 11. Email the Edition to opted-in users (falls back to the brief digest).
+  // 10. Swing alerts + email fire only on the first build of the day, so the
+  //     6-hourly brief refresh never re-spams anyone.
+  let swingAlerts = 0
   let emailsSent = 0
-  try {
-    emailsSent = await sendDigests(ctx, env, brief, edition)
-  } catch {
-    // Never fail the build because email delivery hiccuped.
+  if (!editionExisted) {
+    if (opts.sendAlerts) {
+      try {
+        swingAlerts = await sendSwingAlerts(ctx, env, brief)
+      } catch {
+        // Best-effort.
+      }
+    }
+    if (edition) {
+      try {
+        emailsSent = await sendDigests(ctx, env, brief, edition)
+      } catch {
+        // Never fail the build because email delivery hiccuped.
+      }
+    }
   }
 
   return { brief, emailsSent, usedHistoryFallback, callsResolved, swingAlerts, editionBuilt }

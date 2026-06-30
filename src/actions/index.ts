@@ -17,7 +17,9 @@ const buildBrief: ActionHandler<Env> = async ({ env, userId }) => {
     return { success: false, error: 'Only the app owner can build the brief.' }
   }
   try {
-    const { brief, emailsSent, usedHistoryFallback } = await buildDailyBrief(env)
+    const { brief, emailsSent, usedHistoryFallback } = await buildDailyBrief(env, {
+      forceEdition: true,
+    })
     return {
       success: true,
       data: {
