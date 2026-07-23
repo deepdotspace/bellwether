@@ -97,10 +97,7 @@ export default function Navigation() {
 
   const wordmark = (
     <Link to="/home" className="flex shrink-0 items-center gap-2.5">
-      <span className="relative flex h-2.5 w-2.5 items-center justify-center">
-        <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-        <span className="absolute h-2.5 w-2.5 rounded-full bg-primary/40 blur-[3px]" />
-      </span>
+      <img src="/favicon.svg" alt="" aria-hidden className="h-6 w-6 shrink-0 rounded-[5px]" />
       <span className="font-serif text-[1.35rem] font-semibold leading-none tracking-tight text-foreground">
         Bellwether
       </span>
